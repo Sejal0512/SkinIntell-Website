@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: skinintel
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt && python populate_db.py
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
