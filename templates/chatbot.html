@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant - SkinIntell{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Chat Interface -->
+        <div class="col-lg-8">
+            <div class="chatbot-card">
+                <div class="chatbot-header">
+                    <div class="chatbot-title">
+                        <i class="bi bi-robot"></i>
+                        <div>
+                            <h4>AI Beauty Assistant</h4>
+                            <span class="status-online">● Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chatbot-messages" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="message message-bot">
+                        <div class="message-avatar">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Hello, <strong>{{ user.username }}</strong>! 👋</p>
+                            <p>I'm your AI Beauty Assistant. I can help you with:</p>
+                            <ul>
+                                <li>🧴 Personalized product recommendations</li>
+                                <li>✨ Custom skincare routines</li>
+                                <li>💇 Haircare routines and tips</li>
+                            </ul>
+                            <p>Use the form on the right to tell me about your skin and hair, and I'll create
+                                personalized recommendations for you!</p>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic messages will be added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="col-lg-4">
+            <div class="chatbot-form-card">
+                <div class="form-card-header">
+                    <h5><i class="bi bi-sliders me-2"></i>Tell Me About Yourself</h5>
+                </div>
+                <div class="form-card-body">
+                    <form id="chatbotForm">
+                        <div class="mb-3">
+                            <label for="skinType" class="form-label">Skin Type</label>
+                            <select class="form-select" id="skinType" name="skin_type">
+                                <option value="">Select...</option>
+                                <option value="oily" {% if user.skin_type=='oily' %}selected{% endif %}>Oily</option>
+                                <option value="dry" {% if user.skin_type=='dry' %}selected{% endif %}>Dry</option>
+                                <option value="combination" {% if user.skin_type=='combination' %}selected{% endif %}>
+                                    Combination</option>
+                                <option value="normal" {% if user.skin_type=='normal' %}selected{% endif %}>Normal
+                                </option>
+                                <option value="sensitive" {% if user.skin_type=='sensitive' %}selected{% endif %}>
+                                    Sensitive</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="hairType" class="form-label">Hair Type</label>
+                            <select class="form-select" id="hairType" name="hair_type">
+                                <option value="">Select...</option>
+                                <option value="straight" {% if user.hair_type=='straight' %}selected{% endif %}>Straight
+                                </option>
+                                <option value="wavy" {% if user.hair_type=='wavy' %}selected{% endif %}>Wavy</option>
+                                <option value="curly" {% if user.hair_type=='curly' %}selected{% endif %}>Curly</option>
+                                <option value="coily" {% if user.hair_type=='coily' %}selected{% endif %}>Coily</option>
+                                <option value="fine" {% if user.hair_type=='fine' %}selected{% endif %}>Fine</option>
+                                <option value="thick" {% if user.hair_type=='thick' %}selected{% endif %}>Thick</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="issues" class="form-label">Concerns / Issues</label>
+                            <textarea class="form-control" id="issues" name="issues" rows="2"
+                                placeholder="e.g., acne, dryness, frizz, dandruff">{{ user.issues or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="goal" class="form-label">Beauty Goals</label>
+                            <textarea class="form-control" id="goal" name="goal" rows="2"
+                                placeholder="e.g., clear skin, shiny hair, anti-aging">{{ user.goal or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">What would you like?</label>
+                            <div class="query-type-buttons">
+                                <button type="button" class="btn btn-outline-primary query-type-btn active"
+                                    data-type="products">
+                                    <i class="bi bi-box-seam"></i>
+                                    Products
+                                </button>
+                                <button type="button" class="btn btn-outline-primary query-type-btn"
+                                    data-type="skincare_routine">
+                                    <i class="bi bi-moon-stars"></i>
+                                    Skincare Routine
+                                </button>
+                                <button type="button" class="btn btn-outline-primary query-type-btn"
+                                    data-type="haircare_routine">
+                                    <i class="bi bi-scissors"></i>
+                                    Haircare Routine
+                                </button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="queryType" name="query_type" value="products">
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn">
+                            <i class="bi bi-send me-2"></i>Get Recommendations
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent History -->
+            {% if history %}
+            <div class="chatbot-history-card mt-4">
+                <div class="form-card-header">
+                    <h5><i class="bi bi-clock-history me-2"></i>Recent Queries</h5>
+                </div>
+                <div class="form-card-body">
+                    <div class="history-mini-list">
+                        {% for item in history[:5] %}
+                        <div class="history-mini-item">
+                            <span class="history-mini-text">{{ item.response }}</span>
+                            <span class="history-mini-time">{{ item.timestamp }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('chatbotForm');
+        const chatMessages = document.getElementById('chatMessages');
+        const queryTypeInput = document.getElementById('queryType');
+        const queryTypeBtns = document.querySelectorAll('.query-type-btn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Query type selection
+        queryTypeBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                queryTypeBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                queryTypeInput.value = this.dataset.type;
+            });
+        });
+
+        // Form submission
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const skinType = document.getElementById('skinType').value;
+            const hairType = document.getElementById('hairType').value;
+            const issues = document.getElementById('issues').value;
+            const goal = document.getElementById('goal').value;
+            const queryType = queryTypeInput.value;
+
+            // Add user message
+            const userQuery = `Looking for ${queryType.replace('_', ' ')} recommendations. Skin: ${skinType || 'Not specified'}, Hair: ${hairType || 'Not specified'}, Concerns: ${issues || 'None'}, Goals: ${goal || 'None'}`;
+            addMessage(userQuery, 'user');
+
+            // Show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Thinking...';
+
+            try {
+                const response = await fetch('/api/chatbot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        skin_type: skinType,
+                        hair_type: hairType,
+                        issues: issues,
+                        goal: goal,
+                        query_type: queryType
+                    })
+                });
+
+                const data = await response.json();
+
+                // Build response message
+                let responseHtml = `<p>${data.message}</p>`;
+
+                if (data.products && data.products.length > 0) {
+                    responseHtml += '<div class="products-grid">';
+                    data.products.forEach(product => {
+                        responseHtml += `
+                        <div class="product-card-mini">
+                            <h6 class="product-name">${product.name}</h6>
+                            <span class="product-category">${product.category || 'Beauty'}</span>
+                            <span class="product-price">₹${product.price ? product.price.toFixed(2) : 'N/A'}</span>
+                            <p class="product-desc">${product.description ? product.description.substring(0, 100) + '...' : 'No description available'}</p>
+                        </div>
+                    `;
+                    });
+                    responseHtml += '</div>';
+                }
+
+                if (data.routine) {
+                    if (data.routine.morning) {
+                        responseHtml += '<h6 class="mt-3">☀️ Morning Routine</h6><ol class="routine-list">';
+                        data.routine.morning.forEach(step => {
+                            responseHtml += `<li><strong>${step.name}</strong>: ${step.description}</li>`;
+                        });
+                        responseHtml += '</ol>';
+                    }
+
+                    if (data.routine.evening) {
+                        responseHtml += '<h6 class="mt-3">🌙 Evening Routine</h6><ol class="routine-list">';
+                        data.routine.evening.forEach(step => {
+                            responseHtml += `<li><strong>${step.name}</strong>: ${step.description}</li>`;
+                        });
+                        responseHtml += '</ol>';
+                    }
+
+                    if (data.routine.wash_day) {
+                        responseHtml += '<h6 class="mt-3">🚿 Wash Day Routine</h6><ol class="routine-list">';
+                        data.routine.wash_day.forEach(step => {
+                            responseHtml += `<li><strong>${step.name}</strong>: ${step.description}</li>`;
+                        });
+                        responseHtml += '</ol>';
+                    }
+
+                    if (data.routine.maintenance) {
+                        responseHtml += '<h6 class="mt-3">✨ Maintenance</h6><ol class="routine-list">';
+                        data.routine.maintenance.forEach(step => {
+                            responseHtml += `<li><strong>${step.name}</strong>: ${step.description}</li>`;
+                        });
+                        responseHtml += '</ol>';
+                    }
+                }
+
+                addMessage(responseHtml, 'bot', true);
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Sorry, something went wrong. Please try again.', 'bot');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send me-2"></i>Get Recommendations';
+            }
+        });
+
+        function addMessage(content, type, isHtml = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+
+            const avatarIcon = type === 'bot' ? 'robot' : 'person';
+
+            messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="bi bi-${avatarIcon}"></i>
+            </div>
+            <div class="message-content">
+                ${isHtml ? content : `<p>${content}</p>`}
+            </div>
+        `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

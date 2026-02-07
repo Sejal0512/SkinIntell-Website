@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SkinIntell{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="welcome-card">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">
+                        Welcome back, <span class="gradient-text">{{ user.username }}</span>! 👋
+                    </h1>
+                    <p class="welcome-subtitle">
+                        Ready to discover your perfect skincare and haircare routine today?
+                    </p>
+                </div>
+                <div class="welcome-actions">
+                    <a href="{{ url_for('chatbot') }}" class="btn btn-primary">
+                        <i class="bi bi-robot me-2"></i>Ask AI Assistant
+                    </a>
+                    <a href="{{ url_for('review_radar') }}" class="btn btn-outline-primary ms-2">
+                        <i class="bi bi-search me-2"></i>Search Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ product_count | default(0) }}</h3>
+                    <p class="stat-label">Products Available</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ chatbot_history | length }}</h3>
+                    <p class="stat-label">AI Interactions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-info">
+                <div class="stat-icon">
+                    <i class="bi bi-search"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ search_history | length }}</h3>
+                    <p class="stat-label">Recent Searches</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Summary & Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-person-circle me-2"></i>Your Beauty Profile
+                    </h5>
+                    <a href="{{ url_for('profile') }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                </div>
+                <div class="card-body-custom">
+                    <div class="profile-summary">
+                        <div class="profile-item">
+                            <span class="profile-label">Skin Type</span>
+                            <span class="profile-value">{{ user.skin_type or 'Not set' }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Hair Type</span>
+                            <span class="profile-value">{{ user.hair_type or 'Not set' }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Concerns</span>
+                            <span class="profile-value">{{ user.issues or 'Not set' }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Goals</span>
+                            <span class="profile-value">{{ user.goal or 'Not set' }}</span>
+                        </div>
+                    </div>
+                    {% if not user.skin_type and not user.hair_type %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Complete your profile for better personalized recommendations!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="quick-actions-grid">
+                        <a href="{{ url_for('chatbot') }}" class="quick-action-item">
+                            <i class="bi bi-stars"></i>
+                            <span>Get Skincare Routine</span>
+                        </a>
+                        <a href="{{ url_for('chatbot') }}" class="quick-action-item">
+                            <i class="bi bi-scissors"></i>
+                            <span>Get Haircare Routine</span>
+                        </a>
+                        <a href="{{ url_for('review_radar') }}" class="quick-action-item">
+                            <i class="bi bi-search-heart"></i>
+                            <span>Find Products</span>
+                        </a>
+                        <a href="{{ url_for('profile') }}" class="quick-action-item">
+                            <i class="bi bi-gear"></i>
+                            <span>Update Profile</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-clock-history me-2"></i>Recent AI Interactions
+                    </h5>
+                    <a href="{{ url_for('chatbot') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body-custom">
+                    {% if chatbot_history %}
+                    <div class="history-list">
+                        {% for item in chatbot_history %}
+                        <div class="history-item">
+                            <div class="history-icon">
+                                <i class="bi bi-robot"></i>
+                            </div>
+                            <div class="history-content">
+                                <p class="history-query">{{ item.query[:80] }}{% if item.query|length > 80 %}...{% endif
+                                    %}</p>
+                                <span class="history-time">{{ item.timestamp }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-chat-dots"></i>
+                        <p>No AI interactions yet</p>
+                        <a href="{{ url_for('chatbot') }}" class="btn btn-primary btn-sm">Start Chatting</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-search me-2"></i>Recent Searches
+                    </h5>
+                    <a href="{{ url_for('review_radar') }}" class="btn btn-sm btn-outline-primary">Search More</a>
+                </div>
+                <div class="card-body-custom">
+                    {% if search_history %}
+                    <div class="history-list">
+                        {% for item in search_history %}
+                        <div class="history-item">
+                            <div class="history-icon">
+                                <i class="bi bi-search"></i>
+                            </div>
+                            <div class="history-content">
+                                <p class="history-query">{{ item.search_term }}</p>
+                                <span class="history-time">{{ item.timestamp }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-search"></i>
+                        <p>No searches yet</p>
+                        <a href="{{ url_for('review_radar') }}" class="btn btn-primary btn-sm">Search Products</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

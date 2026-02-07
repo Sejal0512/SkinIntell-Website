@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Review Radar - SkinIntell{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header">
+                <div class="page-header-content">
+                    <h1 class="page-title">
+                        <i class="bi bi-search-heart me-2"></i>Review Radar
+                    </h1>
+                    <p class="page-subtitle">Search through thousands of beauty products and read real reviews</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-card">
+                <form id="searchForm" class="search-form">
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="searchInput" name="q"
+                                    placeholder="Search for products (e.g., moisturizer, shampoo, serum)">
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <select class="form-select form-select-lg" id="categoryFilter" name="category">
+                                <option value="all">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-search me-2"></i>Search Products
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="results-header" id="resultsHeader" style="display: none;">
+                <span class="results-count" id="resultsCount">0 products found</span>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="text-center py-5" id="loadingSpinner" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Searching products...</p>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid-large" id="productsGrid">
+                <!-- Products will be loaded here -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state-large" id="emptyState">
+                <i class="bi bi-search-heart"></i>
+                <h4>Start Your Search</h4>
+                <p>Enter a product name or category to find skincare and haircare products with reviews</p>
+            </div>
+
+            <!-- No Results -->
+            <div class="empty-state-large" id="noResults" style="display: none;">
+                <i class="bi bi-emoji-frown"></i>
+                <h4>No Products Found</h4>
+                <p>Try adjusting your search terms or browse a different category</p>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="text-center mt-4" id="loadMoreContainer" style="display: none;">
+                <button class="btn btn-outline-primary btn-lg" id="loadMoreBtn">
+                    <i class="bi bi-arrow-down-circle me-2"></i>Load More Products
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="productModalBody">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const productsGrid = document.getElementById('productsGrid');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const emptyState = document.getElementById('emptyState');
+        const noResults = document.getElementById('noResults');
+        const resultsHeader = document.getElementById('resultsHeader');
+        const resultsCount = document.getElementById('resultsCount');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        const productModalBody = document.getElementById('productModalBody');
+        const productModalLabel = document.getElementById('productModalLabel');
+
+        let currentPage = 1;
+        let currentQuery = '';
+        let currentCategory = 'all';
+
+        // Search form submission
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            currentPage = 1;
+            currentQuery = searchInput.value.trim();
+            currentCategory = categoryFilter.value;
+            searchProducts(true);
+        });
+
+        // Load more button
+        loadMoreBtn.addEventListener('click', function () {
+            currentPage++;
+            searchProducts(false);
+        });
+
+        async function searchProducts(clearResults = true) {
+            if (clearResults) {
+                productsGrid.innerHTML = '';
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/api/search-products?q=${encodeURIComponent(currentQuery)}&category=${encodeURIComponent(currentCategory)}&page=${currentPage}`);
+                const data = await response.json();
+
+                hideLoading();
+
+                if (data.products && data.products.length > 0) {
+                    emptyState.style.display = 'none';
+                    noResults.style.display = 'none';
+                    resultsHeader.style.display = 'flex';
+                    resultsCount.textContent = `${data.products.length} products found`;
+
+                    data.products.forEach(product => {
+                        productsGrid.innerHTML += createProductCard(product);
+                    });
+
+                    // Show/hide load more button
+                    if (data.products.length >= 12) {
+                        loadMoreContainer.style.display = 'block';
+                    } else {
+                        loadMoreContainer.style.display = 'none';
+                    }
+
+                    // Attach click handlers to new cards
+                    attachCardClickHandlers();
+                } else {
+                    if (clearResults) {
+                        emptyState.style.display = 'none';
+                        noResults.style.display = 'flex';
+                        resultsHeader.style.display = 'none';
+                    }
+                    loadMoreContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                noResults.style.display = 'flex';
+            }
+        }
+
+        function createProductCard(product) {
+            const price = product.price ? `₹${product.price.toFixed(2)}` : 'Price N/A';
+            const description = product.description ? product.description.substring(0, 120) + '...' : 'No description available';
+
+            return `
+            <div class="product-card-large" data-product-id="${product.id}">
+                <div class="product-card-header">
+                    <span class="product-category-badge">${product.category || 'Beauty'}</span>
+                    <span class="product-price-badge">${price}</span>
+                </div>
+                <div class="product-card-body">
+                    <h5 class="product-title">${product.name}</h5>
+                    <p class="product-description">${description}</p>
+                </div>
+                <div class="product-card-footer">
+                    <button class="btn btn-outline-primary btn-sm view-product-btn" data-product-id="${product.id}">
+                        <i class="bi bi-eye me-1"></i>View Details & Reviews
+                    </button>
+                </div>
+            </div>
+        `;
+        }
+
+        function attachCardClickHandlers() {
+            document.querySelectorAll('.view-product-btn').forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const productId = this.dataset.productId;
+                    await loadProductDetails(productId);
+                });
+            });
+        }
+
+        async function loadProductDetails(productId) {
+            productModalBody.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+            productModal.show();
+
+            try {
+                const response = await fetch(`/api/product/${productId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    productModalBody.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                    return;
+                }
+
+                const product = data.product;
+                const reviews = data.reviews;
+
+                productModalLabel.textContent = product.name;
+
+                let reviewsHtml = '';
+                if (reviews && reviews.length > 0) {
+                    reviews.forEach(review => {
+                        const stars = '★'.repeat(review.rating || 5) + '☆'.repeat(5 - (review.rating || 5));
+                        reviewsHtml += `
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-stars">${stars}</span>
+                                <span class="review-source">${review.source || 'Customer'}</span>
+                            </div>
+                            <p class="review-text">${review.review_text}</p>
+                        </div>
+                    `;
+                    });
+                } else {
+                    reviewsHtml = '<p class="text-muted">No reviews available for this product yet.</p>';
+                }
+
+                productModalBody.innerHTML = `
+                <div class="product-detail">
+                    <div class="product-detail-header">
+                        <div class="product-detail-info">
+                            <span class="product-category-badge-lg">${product.category || 'Beauty'}</span>
+                            <h3 class="product-detail-name">${product.name}</h3>
+                            <span class="product-detail-price">${product.price ? '₹' + product.price.toFixed(2) : 'Price N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="product-detail-description">
+                        <h6>Description</h6>
+                        <p>${product.description || 'No description available'}</p>
+                    </div>
+                    <div class="product-detail-reviews">
+                        <h6><i class="bi bi-chat-quote me-2"></i>Customer Reviews</h6>
+                        <div class="reviews-list">
+                            ${reviewsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            } catch (error) {
+                console.error('Error:', error);
+                productModalBody.innerHTML = '<p class="text-danger">Failed to load product details.</p>';
+            }
+        }
+
+        function showLoading() {
+            loadingSpinner.style.display = 'block';
+            emptyState.style.display = 'none';
+            noResults.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+        }
+
+        // Initial search with empty query to show featured products
+        currentQuery = '';
+        searchProducts(true);
+    });
+</script>
+{% endblock %}

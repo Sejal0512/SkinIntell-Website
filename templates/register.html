@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for SkinIntell - Your AI-powered skincare companion">
+    <title>Register - SkinIntell</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+
+        <div class="auth-card auth-card-register">
+            <div class="auth-header">
+                <a href="{{ url_for('landing') }}" class="auth-brand">
+                    <i class="bi bi-droplet-fill"></i>
+                    <span>SkinIntell</span>
+                </a>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Join us and discover your perfect beauty routine</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="form-section-title"><i class="bi bi-person me-2"></i>Account Details</h6>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Username"
+                                required>
+                            <label for="username">Username</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email"
+                                required>
+                            <label for="email">Email address</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Password" required minlength="6">
+                            <label for="password">Password</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                placeholder="Confirm Password" required>
+                            <label for="confirm_password">Confirm Password</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="form-section-title"><i class="bi bi-heart me-2"></i>Beauty Profile (Optional)</h6>
+                        <p class="text-muted small mb-3">Help us personalize your experience</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="skin_type" name="skin_type">
+                                <option value="">Select...</option>
+                                <option value="oily">Oily</option>
+                                <option value="dry">Dry</option>
+                                <option value="combination">Combination</option>
+                                <option value="normal">Normal</option>
+                                <option value="sensitive">Sensitive</option>
+                            </select>
+                            <label for="skin_type">Skin Type</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="hair_type" name="hair_type">
+                                <option value="">Select...</option>
+                                <option value="straight">Straight</option>
+                                <option value="wavy">Wavy</option>
+                                <option value="curly">Curly</option>
+                                <option value="coily">Coily</option>
+                                <option value="fine">Fine</option>
+                                <option value="thick">Thick</option>
+                            </select>
+                            <label for="hair_type">Hair Type</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="issues" name="issues" placeholder="Issues"
+                                style="height: 80px"></textarea>
+                            <label for="issues">Skin/Hair Issues (e.g., acne, dryness, frizz)</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="goal" name="goal" placeholder="Goals"
+                                style="height: 80px"></textarea>
+                            <label for="goal">Beauty Goals (e.g., clear skin, shiny hair)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
+                    Create Account
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+                <a href="{{ url_for('landing') }}" class="back-link">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

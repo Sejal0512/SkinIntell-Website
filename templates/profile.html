@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - SkinIntell{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Profile Header -->
+            <div class="profile-header-card">
+                <div class="profile-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div class="profile-info">
+                    <h2>{{ user.username }}</h2>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <span class="member-since">Member since {{ user.created_at }}</span>
+                </div>
+            </div>
+
+            <!-- Profile Form -->
+            <div class="profile-form-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Beauty Profile
+                    </h5>
+                </div>
+                <div class="card-body-custom">
+                    <form method="POST" action="{{ url_for('profile') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="skin_type" class="form-label">
+                                        <i class="bi bi-droplet me-1"></i>Skin Type
+                                    </label>
+                                    <select class="form-select form-select-lg" id="skin_type" name="skin_type">
+                                        <option value="">Select your skin type...</option>
+                                        <option value="oily" {% if user.skin_type=='oily' %}selected{% endif %}>Oily
+                                        </option>
+                                        <option value="dry" {% if user.skin_type=='dry' %}selected{% endif %}>Dry
+                                        </option>
+                                        <option value="combination" {% if user.skin_type=='combination' %}selected{%
+                                            endif %}>Combination</option>
+                                        <option value="normal" {% if user.skin_type=='normal' %}selected{% endif %}>
+                                            Normal</option>
+                                        <option value="sensitive" {% if user.skin_type=='sensitive' %}selected{% endif
+                                            %}>Sensitive</option>
+                                    </select>
+                                    <div class="form-text">This helps us recommend the right skincare products</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="hair_type" class="form-label">
+                                        <i class="bi bi-scissors me-1"></i>Hair Type
+                                    </label>
+                                    <select class="form-select form-select-lg" id="hair_type" name="hair_type">
+                                        <option value="">Select your hair type...</option>
+                                        <option value="straight" {% if user.hair_type=='straight' %}selected{% endif %}>
+                                            Straight</option>
+                                        <option value="wavy" {% if user.hair_type=='wavy' %}selected{% endif %}>Wavy
+                                        </option>
+                                        <option value="curly" {% if user.hair_type=='curly' %}selected{% endif %}>Curly
+                                        </option>
+                                        <option value="coily" {% if user.hair_type=='coily' %}selected{% endif %}>Coily
+                                        </option>
+                                        <option value="fine" {% if user.hair_type=='fine' %}selected{% endif %}>Fine
+                                        </option>
+                                        <option value="thick" {% if user.hair_type=='thick' %}selected{% endif %}>Thick
+                                        </option>
+                                    </select>
+                                    <div class="form-text">This helps us recommend the right haircare products</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="issues" class="form-label">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Skin & Hair Concerns
+                            </label>
+                            <textarea class="form-control form-control-lg" id="issues" name="issues" rows="3"
+                                placeholder="e.g., acne, wrinkles, dark spots, frizzy hair, dandruff, hair loss">{{ user.issues or '' }}</textarea>
+                            <div class="form-text">Describe any issues you'd like to address</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="goal" class="form-label">
+                                <i class="bi bi-bullseye me-1"></i>Beauty Goals
+                            </label>
+                            <textarea class="form-control form-control-lg" id="goal" name="goal" rows="3"
+                                placeholder="e.g., clear glowing skin, reduced pores, shiny healthy hair, anti-aging">{{ user.goal or '' }}</textarea>
+                            <div class="form-text">What are you hoping to achieve?</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-3">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Profile Tips -->
+            <div class="profile-tips-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-lightbulb me-2"></i>Profile Tips
+                    </h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <div>
+                                    <strong>Be specific about concerns</strong>
+                                    <p class="mb-0 text-muted small">The more details you provide, the better
+                                        recommendations you'll get</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <div>
+                                    <strong>Update regularly</strong>
+                                    <p class="mb-0 text-muted small">Your skin and hair needs change with seasons and
+                                        age</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <div>
+                                    <strong>Set realistic goals</strong>
+                                    <p class="mb-0 text-muted small">Focus on 2-3 main goals for the best results</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="tip-item">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <div>
+                                    <strong>Use the AI Assistant</strong>
+                                    <p class="mb-0 text-muted small">Get personalized routines based on your profile</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

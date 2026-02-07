@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SkinIntell - Your AI-powered skincare and haircare companion">
+    <title>{% block title %}SkinIntell{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if session.get('user_id') %}
+    <!-- Sidebar for authenticated users -->
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+                    <i class="bi bi-droplet-fill"></i>
+                    <span>SkinIntell</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                            href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-grid-1x2-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'chatbot' %}active{% endif %}"
+                            href="{{ url_for('chatbot') }}">
+                            <i class="bi bi-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'review_radar' %}active{% endif %}"
+                            href="{{ url_for('review_radar') }}">
+                            <i class="bi bi-search-heart"></i>
+                            <span>Review Radar</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}"
+                            href="{{ url_for('profile') }}">
+                            <i class="bi bi-person-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="bi bi-person-fill"></i>
+                    <span>{{ session.get('username', 'User') }}</span>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="main-content">
+            <!-- Top navbar for mobile -->
+            <nav class="navbar navbar-mobile d-lg-none">
+                <button class="btn btn-link" id="sidebarToggle">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <span class="navbar-brand">SkinIntell</span>
+                <div></div>
+            </nav>
+
+            <!-- Flash Messages -->
+            <div class="container-fluid">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Content for non-authenticated users -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% block content_guest %}{% endblock %}
+    {% endif %}
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
