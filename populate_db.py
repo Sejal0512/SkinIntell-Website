@@ -1,3 +1,4 @@
+
 """
 SkinIntell Database Population Script
 Generates and populates the database with 10,000+ skincare/haircare products and reviews
@@ -334,3 +335,4 @@ def populate_database():
 
 if __name__ == '__main__':
     populate_database()
+
