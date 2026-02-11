@@ -42,9 +42,21 @@ def init_db():
             name TEXT NOT NULL,
             price REAL,
             category TEXT,
-            description TEXT
+            description TEXT,
+            vegan BOOLEAN DEFAULT 0,
+            cruelty_free BOOLEAN DEFAULT 0
         )
     ''')
+    
+    # Migration: Add vegan/cruelty_free columns if they don't exist (for existing DBs)
+    try:
+        cursor.execute('ALTER TABLE Products ADD COLUMN vegan BOOLEAN DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    try:
+        cursor.execute('ALTER TABLE Products ADD COLUMN cruelty_free BOOLEAN DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     
     # Reviews table
     cursor.execute('''
@@ -144,15 +156,15 @@ def update_user_profile(user_id, skin_type=None, hair_type=None, issues=None, go
 
 # ============== PRODUCT OPERATIONS ==============
 
-def add_product(name, price, category, description):
+def add_product(name, price, category, description, vegan=0, cruelty_free=0):
     """Add a new product"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
-        INSERT INTO Products (name, price, category, description)
-        VALUES (?, ?, ?, ?)
-    ''', (name, price, category, description))
+        INSERT INTO Products (name, price, category, description, vegan, cruelty_free)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (name, price, category, description, vegan, cruelty_free))
     
     conn.commit()
     product_id = cursor.lastrowid
@@ -166,8 +178,8 @@ def get_product_by_id(product_id):
     conn.close()
     return product
 
-def search_products(search_term, category=None, limit=20, offset=0):
-    """Search products by name or description"""
+def search_products(search_term, category=None, limit=20, offset=0, vegan=None, cruelty_free=None):
+    """Search products by name or description, with optional vegan/cruelty-free filters"""
     conn = get_db_connection()
     
     query = 'SELECT * FROM Products WHERE (name LIKE ? OR description LIKE ?)'
@@ -176,6 +188,11 @@ def search_products(search_term, category=None, limit=20, offset=0):
     if category and category != 'all':
         query += ' AND category = ?'
         params.append(category)
+    
+    if vegan:
+        query += ' AND vegan = 1'
+    if cruelty_free:
+        query += ' AND cruelty_free = 1'
     
     query += ' LIMIT ? OFFSET ?'
     params.extend([limit, offset])
@@ -289,14 +306,23 @@ def get_user_search_history(user_id, limit=10):
 
 # ============== AI RECOMMENDATION ENGINE ==============
 
-def get_recommended_products(skin_type=None, hair_type=None, issues=None, goal=None, limit=5):
+def get_recommended_products(skin_type=None, hair_type=None, issues=None, goal=None, limit=5, vegan=None, cruelty_free=None):
     """
     Rule-based recommendation engine with category enforcement
+    Supports optional vegan/cruelty-free filtering
     """
     conn = get_db_connection()
     
     conditions = []
     params = []
+    
+    # Build vegan/cruelty-free filter clause
+    vcf_filters = []
+    if vegan:
+        vcf_filters.append('vegan = 1')
+    if cruelty_free:
+        vcf_filters.append('cruelty_free = 1')
+    vcf_clause = (' AND ' + ' AND '.join(vcf_filters)) if vcf_filters else ''
     
     # 1. Skin Type matches -> Strictly Skincare products
     if skin_type:
@@ -347,13 +373,11 @@ def get_recommended_products(skin_type=None, hair_type=None, issues=None, goal=N
 
     if not conditions:
         # Default: Random mix
-        products = conn.execute(
-            'SELECT * FROM Products ORDER BY RANDOM() LIMIT ?',
-            (limit,)
-        ).fetchall()
+        query = 'SELECT * FROM Products WHERE 1=1' + vcf_clause + ' ORDER BY RANDOM() LIMIT ?'
+        products = conn.execute(query, (limit,)).fetchall()
     else:
-        # Combine all conditions with OR
-        query = "SELECT * FROM Products WHERE " + " OR ".join(conditions) + " ORDER BY RANDOM() LIMIT ?"
+        # Combine all conditions with OR, then apply vegan/CF filter
+        query = "SELECT * FROM Products WHERE (" + " OR ".join(conditions) + ")" + vcf_clause + " ORDER BY RANDOM() LIMIT ?"
         params.append(limit)  
         
         products = conn.execute(query, params).fetchall()
@@ -361,10 +385,8 @@ def get_recommended_products(skin_type=None, hair_type=None, issues=None, goal=N
         # Fallback if specific search gave no results
         if len(products) < limit:
             remaining = limit - len(products)
-            fallback = conn.execute(
-                'SELECT * FROM Products ORDER BY RANDOM() LIMIT ?',
-                (remaining,)
-            ).fetchall()
+            fallback_query = 'SELECT * FROM Products WHERE 1=1' + vcf_clause + ' ORDER BY RANDOM() LIMIT ?'
+            fallback = conn.execute(fallback_query, (remaining,)).fetchall()
             products = list(products) + list(fallback)
     
     conn.close()
@@ -444,6 +466,25 @@ def generate_haircare_routine(hair_type, issues=None, goal=None):
     ]
     
     return routine
+
+def get_vegan_cf_products(limit=6):
+    """Get random vegan and cruelty-free products for dashboard picks"""
+    conn = get_db_connection()
+    products = conn.execute(
+        'SELECT * FROM Products WHERE vegan = 1 AND cruelty_free = 1 ORDER BY RANDOM() LIMIT ?',
+        (limit,)
+    ).fetchall()
+    conn.close()
+    return products
+
+def get_vegan_cf_stats():
+    """Get counts of vegan and cruelty-free products"""
+    conn = get_db_connection()
+    vegan_count = conn.execute('SELECT COUNT(*) FROM Products WHERE vegan = 1').fetchone()[0]
+    cf_count = conn.execute('SELECT COUNT(*) FROM Products WHERE cruelty_free = 1').fetchone()[0]
+    both_count = conn.execute('SELECT COUNT(*) FROM Products WHERE vegan = 1 AND cruelty_free = 1').fetchone()[0]
+    conn.close()
+    return {'vegan': vegan_count, 'cruelty_free': cf_count, 'both': both_count}
 
 
 if __name__ == '__main__':

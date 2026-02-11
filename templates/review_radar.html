@@ -24,7 +24,7 @@
             <div class="search-card">
                 <form id="searchForm" class="search-form">
                     <div class="row g-3">
-                        <div class="col-lg-6">
+                        <div class="col-lg-5">
                             <div class="input-group input-group-lg">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" class="form-control" id="searchInput" name="q"
@@ -39,9 +39,25 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-lg-3">
+                        <div class="col-lg-2">
+                            <div class="d-flex flex-column gap-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="veganFilter">
+                                    <label class="form-check-label" for="veganFilter">
+                                        <span class="badge-vegan">🌿 Vegan</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="crueltyFreeFilter">
+                                    <label class="form-check-label" for="crueltyFreeFilter">
+                                        <span class="badge-cruelty-free">🐰 Cruelty-Free</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-2">
                             <button type="submit" class="btn btn-primary btn-lg w-100">
-                                <i class="bi bi-search me-2"></i>Search Products
+                                <i class="bi bi-search me-2"></i>Search
                             </button>
                         </div>
                     </div>
@@ -154,8 +170,11 @@
 
             showLoading();
 
+            const veganFilter = document.getElementById('veganFilter').checked ? '1' : '0';
+            const cfFilter = document.getElementById('crueltyFreeFilter').checked ? '1' : '0';
+
             try {
-                const response = await fetch(`/api/search-products?q=${encodeURIComponent(currentQuery)}&category=${encodeURIComponent(currentCategory)}&page=${currentPage}`);
+                const response = await fetch(`/api/search-products?q=${encodeURIComponent(currentQuery)}&category=${encodeURIComponent(currentCategory)}&page=${currentPage}&vegan=${veganFilter}&cruelty_free=${cfFilter}`);
                 const data = await response.json();
 
                 hideLoading();
@@ -195,8 +214,12 @@
         }
 
         function createProductCard(product) {
-            const price = product.price ? `₹${product.price.toFixed(2)}` : 'Price N/A';
+            const price = product.price ? `\u20b9${product.price.toFixed(2)}` : 'Price N/A';
             const description = product.description ? product.description.substring(0, 120) + '...' : 'No description available';
+
+            let badges = '';
+            if (product.vegan) badges += '<span class="badge-vegan">\ud83c\udf3f Vegan</span> ';
+            if (product.cruelty_free) badges += '<span class="badge-cruelty-free">\ud83d\udc30 Cruelty-Free</span>';
 
             return `
             <div class="product-card-large" data-product-id="${product.id}">
@@ -206,6 +229,7 @@
                 </div>
                 <div class="product-card-body">
                     <h5 class="product-title">${product.name}</h5>
+                    ${badges ? '<div class="product-badges mb-2">' + badges + '</div>' : ''}
                     <p class="product-description">${description}</p>
                 </div>
                 <div class="product-card-footer">
@@ -274,7 +298,11 @@
                         <div class="product-detail-info">
                             <span class="product-category-badge-lg">${product.category || 'Beauty'}</span>
                             <h3 class="product-detail-name">${product.name}</h3>
-                            <span class="product-detail-price">${product.price ? '₹' + product.price.toFixed(2) : 'Price N/A'}</span>
+                            <span class="product-detail-price">${product.price ? '\u20b9' + product.price.toFixed(2) : 'Price N/A'}</span>
+                            <div class="product-detail-badges mt-2">
+                                ${product.vegan ? '<span class="badge-vegan">\ud83c\udf3f Vegan</span> ' : ''}
+                                ${product.cruelty_free ? '<span class="badge-cruelty-free">\ud83d\udc30 Cruelty-Free</span>' : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="product-detail-description">
@@ -303,6 +331,15 @@
 
         function hideLoading() {
             loadingSpinner.style.display = 'none';
+        }
+
+        // Check URL params and pre-set filters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('vegan') === '1') {
+            document.getElementById('veganFilter').checked = true;
+        }
+        if (urlParams.get('cruelty_free') === '1') {
+            document.getElementById('crueltyFreeFilter').checked = true;
         }
 
         // Initial search with empty query to show featured products

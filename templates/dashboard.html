@@ -30,7 +30,7 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card stat-card-primary">
                 <div class="stat-icon">
                     <i class="bi bi-box-seam"></i>
@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card stat-card-success">
                 <div class="stat-icon">
                     <i class="bi bi-chat-dots"></i>
@@ -52,7 +52,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="stat-card stat-card-info">
                 <div class="stat-icon">
                     <i class="bi bi-search"></i>
@@ -60,6 +60,17 @@
                 <div class="stat-content">
                     <h3 class="stat-number">{{ search_history | length }}</h3>
                     <p class="stat-label">Recent Searches</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-card-vegan">
+                <div class="stat-icon">
+                    <i class="bi bi-heart-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ vegan_cf_stats.both | default(0) }}</h3>
+                    <p class="stat-label">Vegan & CF Products</p>
                 </div>
             </div>
         </div>
@@ -200,6 +211,49 @@
                         <i class="bi bi-search"></i>
                         <p>No searches yet</p>
                         <a href="{{ url_for('review_radar') }}" class="btn btn-primary btn-sm">Search Products</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vegan & Cruelty-Free Picks -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">
+                        <i class="bi bi-heart-fill me-2"></i>🌿 Vegan & Cruelty-Free Picks
+                    </h5>
+                    <a href="{{ url_for('review_radar') }}?vegan=1&cruelty_free=1"
+                        class="btn btn-sm btn-outline-success">Browse All</a>
+                </div>
+                <div class="card-body-custom">
+                    {% if vegan_cf_products %}
+                    <div class="vegan-cf-grid">
+                        {% for product in vegan_cf_products %}
+                        <div class="vegan-cf-card">
+                            <div class="vegan-cf-card-header">
+                                <span class="product-category-badge">{{ product.category or 'Beauty' }}</span>
+                                <span class="product-price-badge">₹{{ '%.2f' | format(product.price) if product.price
+                                    else 'N/A' }}</span>
+                            </div>
+                            <h6 class="vegan-cf-card-title">{{ product.name }}</h6>
+                            <div class="product-badges">
+                                {% if product.vegan %}<span class="badge-vegan">🌿 Vegan</span>{% endif %}
+                                {% if product.cruelty_free %}<span class="badge-cruelty-free">🐰 Cruelty-Free</span>{%
+                                endif %}
+                            </div>
+                            <p class="vegan-cf-card-desc">{{ product.description[:100] + '...' if product.description
+                                else 'No description' }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-heart"></i>
+                        <p>No vegan & cruelty-free products available yet</p>
                     </div>
                     {% endif %}
                 </div>

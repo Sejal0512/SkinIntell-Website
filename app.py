@@ -15,7 +15,8 @@ from database import (
     search_products, get_product_by_id, get_reviews_for_product, get_product_count,
     get_all_categories, save_chatbot_query, get_user_chatbot_history,
     save_search_history, get_user_search_history, get_recommended_products,
-    generate_skincare_routine, generate_haircare_routine
+    generate_skincare_routine, generate_haircare_routine,
+    get_vegan_cf_products, get_vegan_cf_stats
 )
 
 app = Flask(__name__)
@@ -130,12 +131,16 @@ def dashboard():
     chatbot_history = get_user_chatbot_history(session['user_id'], limit=5)
     search_history = get_user_search_history(session['user_id'], limit=5)
     product_count = get_product_count()
+    vegan_cf_products = get_vegan_cf_products(limit=6)
+    vegan_cf_stats = get_vegan_cf_stats()
     
     return render_template('dashboard.html', 
                          user=user, 
                          chatbot_history=chatbot_history,
                          search_history=search_history,
-                         product_count=product_count)
+                         product_count=product_count,
+                         vegan_cf_products=vegan_cf_products,
+                         vegan_cf_stats=vegan_cf_stats)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -183,18 +188,29 @@ def api_chatbot():
     issues = data.get('issues', '')
     goal = data.get('goal', '')
     query_type = data.get('query_type', 'products')  # 'products', 'skincare_routine', 'haircare_routine'
+    vegan = data.get('vegan', False)
+    cruelty_free = data.get('cruelty_free', False)
     
     # Build the query string for history
-    query = f"Skin: {skin_type}, Hair: {hair_type}, Issues: {issues}, Goal: {goal}, Type: {query_type}"
+    prefs = []
+    if vegan: prefs.append('Vegan')
+    if cruelty_free: prefs.append('Cruelty-Free')
+    pref_str = f", Preferences: {', '.join(prefs)}" if prefs else ''
+    query = f"Skin: {skin_type}, Hair: {hair_type}, Issues: {issues}, Goal: {goal}, Type: {query_type}{pref_str}"
     
     response_data = {}
     
     if query_type == 'products':
         # Get recommended products
-        products = get_recommended_products(skin_type, hair_type, issues, goal, limit=6)
+        products = get_recommended_products(skin_type, hair_type, issues, goal, limit=6, vegan=vegan, cruelty_free=cruelty_free)
         products_list = [dict(p) for p in products]
         response_data['products'] = products_list
         response_data['message'] = f"Based on your profile, here are {len(products_list)} recommended products for you!"
+        if vegan or cruelty_free:
+            filter_tags = []
+            if vegan: filter_tags.append('🌿 Vegan')
+            if cruelty_free: filter_tags.append('🐰 Cruelty-Free')
+            response_data['message'] += f" (Filtered: {', '.join(filter_tags)})"
         response_text = f"Recommended {len(products_list)} products"
         
     elif query_type == 'skincare_routine':
@@ -211,7 +227,7 @@ def api_chatbot():
     
     else:
         # Default: get products
-        products = get_recommended_products(skin_type, hair_type, issues, goal, limit=6)
+        products = get_recommended_products(skin_type, hair_type, issues, goal, limit=6, vegan=vegan, cruelty_free=cruelty_free)
         products_list = [dict(p) for p in products]
         response_data['products'] = products_list
         response_data['message'] = "Here are some product recommendations for you!"
@@ -229,6 +245,8 @@ def api_search_products():
     search_term = request.args.get('q', '').strip()
     category = request.args.get('category', 'all')
     page = int(request.args.get('page', 1))
+    vegan = request.args.get('vegan', '0') == '1'
+    cruelty_free = request.args.get('cruelty_free', '0') == '1'
     per_page = 12
     offset = (page - 1) * per_page
     
@@ -237,10 +255,10 @@ def api_search_products():
         save_search_history(session['user_id'], search_term)
         
         # Search products
-        products = search_products(search_term, category, limit=per_page, offset=offset)
+        products = search_products(search_term, category, limit=per_page, offset=offset, vegan=vegan, cruelty_free=cruelty_free)
     else:
         # Return some random/featured products if no search term
-        products = search_products('', category, limit=per_page, offset=offset)
+        products = search_products('', category, limit=per_page, offset=offset, vegan=vegan, cruelty_free=cruelty_free)
     
     products_list = [dict(p) for p in products]
     

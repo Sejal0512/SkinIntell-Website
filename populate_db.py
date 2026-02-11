@@ -30,6 +30,38 @@ HAIRCARE_BRANDS = [
     "Not Your Mother's", "OGX", "Garnier Fructis", "Pantene", "TRESemmé", "Herbal Essences"
 ]
 
+# ============== VEGAN & CRUELTY-FREE BRAND DATA ==============
+# Source: Kaggle Cruelty-Free Brands dataset + BeautyFeeds sample data
+# These are real-world cruelty-free brands cross-referenced from datasets
+
+CRUELTY_FREE_BRANDS = {
+    # Skincare - certified cruelty-free
+    "The Ordinary", "Drunk Elephant", "Tatcha", "Glossier", "Herbivore",
+    "Youth to the People", "Biossance", "Farmacy", "Glow Recipe",
+    "Peach & Lily", "Klairs", "COSRX", "Beauty of Joseon", "Innisfree",
+    "First Aid Beauty", "Mario Badescu", "Paula's Choice", "Sunday Riley",
+    "Then I Met You", "Some By Mi", "Etude House", "Belif", "Fresh",
+    "Peter Thomas Roth", "Murad",
+    # Haircare - certified cruelty-free
+    "Briogeo", "Amika", "IGK", "Verb", "Ouai", "DevaCurl",
+    "Pattern", "Mielle", "Curls", "SheaMoisture", "Cantu",
+    "Carol's Daughter", "Living Proof", "Aveda", "Bumble and Bumble",
+    "Function of Beauty", "Prose", "Olaplex", "Not Your Mother's",
+    "Drybar"
+}
+
+VEGAN_BRANDS = {
+    # Skincare - vegan certified
+    "The Ordinary", "Herbivore", "Youth to the People", "Biossance",
+    "Farmacy", "Glow Recipe", "Drunk Elephant", "Klairs", "COSRX",
+    "Paula's Choice", "Some By Mi", "First Aid Beauty", "Glossier",
+    "Pacifica", "e.l.f.", "Derma E",
+    # Haircare - vegan certified
+    "Amika", "IGK", "Verb", "Briogeo", "DevaCurl",
+    "Mielle", "Curls", "Function of Beauty", "Prose",
+    "Aveda", "Not Your Mother's", "Olaplex"
+}
+
 # Skincare product types
 SKINCARE_PRODUCTS = {
     "Face Care": [
@@ -243,10 +275,14 @@ def populate_database():
                         price = generate_price(product_type)
                         description = generate_product_description(product_type, variant, benefit)
                         
+                        # Determine vegan and cruelty-free status based on brand
+                        is_vegan = 1 if brand in VEGAN_BRANDS else 0
+                        is_cruelty_free = 1 if brand in CRUELTY_FREE_BRANDS else 0
+                        
                         cursor.execute('''
-                            INSERT INTO Products (name, price, category, description)
-                            VALUES (?, ?, ?, ?)
-                        ''', (name, price, category, description))
+                            INSERT INTO Products (name, price, category, description, vegan, cruelty_free)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (name, price, category, description, is_vegan, is_cruelty_free))
                         
                         product_id = cursor.lastrowid
                         total_products += 1
@@ -291,10 +327,14 @@ def populate_database():
                         price = generate_price(product_type)
                         description = generate_product_description(product_type, variant, benefit)
                         
+                        # Determine vegan and cruelty-free status based on brand
+                        is_vegan = 1 if brand in VEGAN_BRANDS else 0
+                        is_cruelty_free = 1 if brand in CRUELTY_FREE_BRANDS else 0
+                        
                         cursor.execute('''
-                            INSERT INTO Products (name, price, category, description)
-                            VALUES (?, ?, ?, ?)
-                        ''', (name, price, category, description))
+                            INSERT INTO Products (name, price, category, description, vegan, cruelty_free)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (name, price, category, description, is_vegan, is_cruelty_free))
                         
                         product_id = cursor.lastrowid
                         total_products += 1

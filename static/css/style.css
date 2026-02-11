@@ -1630,4 +1630,84 @@ body {
         height: auto;
         max-height: 60vh;
     }
+
+    .vegan-cf-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============== VEGAN & CRUELTY-FREE BADGES ============== */
+.badge-vegan {
+    display: inline-block;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.badge-cruelty-free {
+    display: inline-block;
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    color: #fff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.product-badges {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+/* Vegan stat card */
+.stat-card-vegan .stat-icon {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+}
+
+/* Vegan & CF Picks grid (Dashboard) */
+.vegan-cf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.vegan-cf-card {
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+    transition: var(--transition);
+    border: 1px solid var(--gray-100);
+}
+
+.vegan-cf-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: #22c55e;
+}
+
+.vegan-cf-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.vegan-cf-card-title {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--gray-900);
+    font-size: 0.9375rem;
+}
+
+.vegan-cf-card-desc {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+    margin: 0.5rem 0 0;
 }
